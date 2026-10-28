@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B1F3B">
+<title>Event Management System – Mini Project</title>
+<style>
+:root{
+  --ink:#1B1F3B; --ink2:#2B3160; --saffron:#F4A300; --saffron-d:#B87800;
+  --bg:#EEF1F6; --card:#FFFFFF; --line:#D9DEE8; --text:#1d2233; --mute:#5b6479;
+  --ok:#0E7C5B; --bad:#C0392B; --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+h1,h2,h3{font-family:"Iowan Old Style",Georgia,"Times New Roman",serif;line-height:1.2;color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+
+/* header */
+.top{background:var(--ink);color:#fff;padding:calc(18px + env(safe-area-inset-top)) 18px 0}
+.top .wrap{max-width:980px;margin:0 auto}
+.top h1{color:#fff;font-size:1.65rem}
+.top p.sub{color:#B9C0E0;font-size:.9rem;margin-top:4px}
+.team{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 16px}
+.team div{background:var(--ink2);border-radius:10px;padding:8px 12px;font-size:.85rem}
+.team b{display:block;font-weight:600}
+.team span{color:#B9C0E0;font-size:.78rem;font-variant-numeric:tabular-nums}
+.modes{display:flex;gap:4px}
+.modes button{flex:1;max-width:200px;background:transparent;border:0;color:#B9C0E0;padding:12px 8px;font-weight:600;border-bottom:4px solid transparent}
+.modes button[aria-selected=true]{color:#fff;border-color:var(--saffron)}
+
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;background:var(--ink);color:#fff;min-height:44px}
+.btn.alt{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.go{background:var(--saffron);color:#1b1500}
+.btn.bad{background:#fff;color:var(--bad);border:1.5px solid var(--bad)}
+.btn.sm{padding:6px 10px;min-height:36px;font-size:.88rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+label{display:block;font-size:.85rem;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;min-height:44px}
+textarea{min-height:80px;resize:vertical}
+.msg{margin-top:10px;font-size:.9rem;color:var(--bad);min-height:1.2em}
+
+/* auth */
+.auth{max-width:420px;margin:12px auto}
+.auth h2{font-size:1.4rem;margin-bottom:4px}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:4px;margin:12px 0}
+.seg button{flex:1;border:0;background:transparent;padding:9px;border-radius:8px;font-weight:600;color:var(--mute)}
+.seg button[aria-selected=true]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.hint{background:#FFF6DD;border:1px solid #F2D58A;border-radius:10px;padding:10px 12px;font-size:.85rem;margin-top:14px}
+
+/* app */
+.who{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.who b{display:block}
+.who span{font-size:.8rem;color:var(--mute)}
+.subnav{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
+.subnav button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-weight:600;white-space:nowrap}
+.subnav button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tools{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px}
+@media(min-width:620px){.tools{grid-template-columns:2fr 1fr auto}}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:700px){.grid{grid-template-columns:1fr 1fr}}
+.ev{display:flex;flex-direction:column;gap:8px}
+.ev h3{font-size:1.15rem}
+.ev .meta{font-size:.88rem;color:var(--mute)}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:999px;background:#E4E8FA;color:var(--ink2)}
+.badge.end{background:#EEE;color:#666}
+.badge.full{background:#FBE0DC;color:var(--bad)}
+.badge.you{background:#DDF3EA;color:var(--ok)}
+.bar{height:8px;border-radius:8px;background:var(--bg);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--saffron)}
+.bar.full i{background:var(--bad)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row.sp{justify-content:space-between}
+.empty{text-align:center;color:var(--mute);padding:28px 10px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:700px){.stats{grid-template-columns:repeat(5,1fr)}}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.stat b{font-family:Georgia,serif;font-size:1.7rem;color:var(--ink);display:block}
+.stat span{font-size:.8rem;color:var(--mute)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(20,23,45,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.modal[hidden]{display:none}
+.sheet{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+@media(min-width:620px){.modal{align-items:center}.sheet{border-radius:18px}}
+.sheet h2{font-size:1.25rem;margin-bottom:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:60;font-size:.92rem;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* tables */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:420px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#E9ECF7;color:var(--ink)}
+
+/* report */
+.report .card{margin-bottom:14px}
+.report h2{font-size:1.25rem;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--saffron)}
+.report h3{font-size:1.02rem;margin:14px 0 6px}
+.report p,.report li{font-size:.97rem;max-width:72ch}
+.report ul,.report ol{margin:6px 0 6px 22px}
+.report .lead{font-size:1.02rem}
+.report svg{display:block;width:100%;min-width:640px;height:auto;background:#fff}
+.report figcaption{font-size:.82rem;color:var(--mute);margin-top:6px}
+.layers{display:flex;flex-direction:column;gap:8px;align-items:stretch;margin:10px 0}
+.layer{border:2px solid var(--ink);border-radius:12px;padding:10px 12px}
+.layer b{display:block;color:var(--ink)}
+.layer small{color:var(--mute)}
+.layer .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.layer .chips span{background:#E4E8FA;border-radius:8px;padding:3px 9px;font-size:.82rem}
+.arrow{text-align:center;color:var(--saffron-d);font-weight:700;font-size:.85rem}
+.noprint-tools{display:flex;justify-content:flex-end;margin-bottom:10px}
+footer{text-align:center;color:var(--mute);font-size:.8rem;padding:20px}
+
+@media print{
+  .top .modes,.noprint-tools,#appPanel,#toast,footer{display:none!important}
+  body{background:#fff}.top{background:#fff;color:#000;padding:0}.top h1{color:#000}.top p.sub,.team span{color:#333}.team div{background:#f2f2f2}
+  #reportPanel{display:block!important}.card{break-inside:avoid;border:0;padding:6px 0}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Event Management System</h1>
+    <p class="sub">Software Engineering – Mini Project (Case Study)</p>
+    <div class="team">
+      <div><b>Mohammed Maaz</b><span>PRN 202456111997</span></div>
+      <div><b>Mohammed Talha</b><span>PRN 202456112020</span></div>
+    </div>
+    <div class="modes" role="tablist">
+      <button role="tab" id="tabApp" aria-selected="true">Working system</button>
+      <button role="tab" id="tabRep" aria-selected="false">Project report</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="appPanel"><div id="appRoot"></div></section>
+
+  <section id="reportPanel" class="report" hidden>
+    <div class="noprint-tools"><button class="btn alt sm" onclick="window.print()">Print / Save as PDF</button></div>
+
+    <div class="card">
+      <h2>Abstract</h2>
+      <ul>
+        <li><b>Introduction:</b> The Event Management System (EMS) is a web application that lets a college or club publish events and lets students register for them online.</li>
+        <li><b>Problem addressed:</b> Events are usually announced on notice boards and WhatsApp groups, and registrations are collected on paper or in spreadsheets. This causes confusion, duplicate entries and no live view of seats.</li>
+        <li><b>Proposed solution:</b> One system where an administrator creates and manages events, students log in, browse and register, and reports are generated automatically.</li>
+        <li><b>Technologies used:</b> HTML5, CSS3 and JavaScript (ES6) with browser Web Storage as the database; GitHub for version control; VS Code as the IDE.</li>
+        <li><b>Expected outcomes:</b> Faster registration, no overbooking, accurate attendee lists and instant reports that can be exported as CSV.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>1. Title</h2>
+      <p><b>Project Title:</b> Event Management System</p>
+      <div class="scroll"><table><tr><th>PRN</th><th>Name</th></tr>
+      <tr><td>202456111997</td><td>Mohammed Maaz</td></tr>
+      <tr><td>202456112020</td><td>Mohammed Talha</td></tr></table></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Problem Statement</h2>
+      <h3>Background</h3>
+      <p>Colleges, clubs and departments organise seminars, workshops, technical contests and cultural programmes throughout the year. Each event needs publicity, registration, seat control and a final attendee list.</p>
+      <h3>Existing issue</h3>
+      <p>Information is scattered across posters, WhatsApp messages and paper forms. Organisers cannot tell how many seats are left, students register twice or miss deadlines, and compiling reports takes hours.</p>
+      <h3>Need for the proposed system</h3>
+      <p>A single, easy-to-use system is needed that shows every event in one place, controls capacity automatically, keeps accurate records and produces reports on demand.</p>
+    </div>
+
+    <div class="card">
+      <h2>3. Existing System</h2>
+      <h3>Current process</h3>
+      <ol>
+        <li>The organiser prepares a poster or message with event details.</li>
+        <li>The notice is pinned on boards or forwarded in groups.</li>
+        <li>Students write their names on a sheet or fill a shared form.</li>
+        <li>The organiser counts entries by hand before the event.</li>
+      </ol>
+      <h3>Existing technologies</h3>
+      <p>Paper registers, notice boards, WhatsApp groups, Google Forms and Excel sheets.</p>
+      <h3>Working mechanism</h3>
+      <p>Data flows one way, from the organiser to students, through informal channels. Registrations are collected separately and merged manually, so no part of the process is connected.</p>
+    </div>
+
+    <div class="card">
+      <h2>4. Limitations of Existing System</h2>
+      <ul>
+        <li><b>Manual process:</b> every step depends on people copying data.</li>
+        <li><b>Time-consuming:</b> counting, sorting and verifying lists takes hours.</li>
+        <li><b>Data redundancy:</b> the same student appears in several lists.</li>
+        <li><b>Human errors:</b> spelling mistakes, lost sheets and wrong counts.</li>
+        <li><b>Security issues:</b> personal details are shared openly in groups.</li>
+        <li><b>Poor scalability:</b> the process breaks down when events or students increase.</li>
+        <li><b>No real-time seat status:</b> overbooking is common.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>5. Proposed Solution</h2>
+      <h3>Objectives</h3>
+      <ul>
+        <li>Provide one place to publish and browse events.</li>
+        <li>Allow online registration with automatic seat control.</li>
+        <li>Give administrators full control over events and attendees.</li>
+        <li>Generate summary and attendee reports instantly.</li>
+      </ul>
+      <h3>Features</h3>
+      <ul>
+        <li>Registration and login with two roles: Admin and Student.</li>
+        <li>Create, update and delete events (title, date, time, venue, category, capacity, description).</li>
+        <li>Search and filter by category; live seat bar on every event.</li>
+        <li>One-tap register and cancel; duplicate and overbooking checks.</li>
+        <li>Dashboard of totals and fill rate; CSV export; mobile-friendly interface.</li>
+      </ul>
+      <h3>Working methodology</h3>
+      <p>The user opens the web page, logs in, and the interface changes according to the role. All actions go through JavaScript service functions that validate the input, update the data store and refresh the screen.</p>
+      <h3>Benefits</h3>
+      <p>Less paperwork, correct attendee counts, quick reports, and access from any phone or computer without installing anything.</p>
+    </div>
+
+    <div class="card">
+      <h2>6. Functional Requirements</h2>
+      <p>These describe what the system should do.</p>
+      <div class="scroll"><table>
+        <tr><th>Requirement ID</th><th>Description</th></tr>
+        <tr><td>FR1</td><td>User Registration (student creates an account)</td></tr>
+        <tr><td>FR2</td><td>User Login and Logout with role-based access</td></tr>
+        <tr><td>FR3</td><td>Add Records – admin creates an event</td></tr>
+        <tr><td>FR4</td><td>Update Records – admin edits an event</td></tr>
+        <tr><td>FR5</td><td>Delete Records – admin removes an event and its registrations</td></tr>
+        <tr><td>FR6</td><td>Search and filter events by name, venue or category</td></tr>
+        <tr><td>FR7</td><td>Register for an event (blocked if full, duplicate or already ended)</td></tr>
+        <tr><td>FR8</td><td>Cancel a registration</td></tr>
+        <tr><td>FR9</td><td>View attendee list of an event (admin)</td></tr>
+        <tr><td>FR10</td><td>Generate Reports and export them as CSV</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>7. Non-Functional Requirements</h2>
+      <p>These describe how the system should perform.</p>
+      <ul>
+        <li><b>Performance:</b> pages respond in under one second for up to a few thousand records.</li>
+        <li><b>Security:</b> passwords are stored as hashes, never as plain text; admin functions are hidden from students; all user input is escaped before display.</li>
+        <li><b>Reliability:</b> data stays saved between visits; invalid input is rejected with a clear message.</li>
+        <li><b>Availability:</b> works offline once the file is on the device.</li>
+        <li><b>Maintainability:</b> code is split into small, named functions and is commented.</li>
+        <li><b>Scalability:</b> the storage layer can be swapped for a server database without changing the interface.</li>
+        <li><b>Usability:</b> large touch targets, readable text, and a layout that adapts to phones, tablets and desktops.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>8. Software Development Life Cycle (SDLC) Model Used</h2>
+      <p><b>Selected model: Agile (iterative, sprint-based).</b></p>
+      <h3>Why this model was selected</h3>
+      <ul>
+        <li>The team is small and requirements became clearer as screens were demonstrated.</li>
+        <li>Working software was needed early so features could be tested on real phones.</li>
+        <li>Changes such as extra fields or report types had to be absorbed cheaply.</li>
+      </ul>
+      <h3>Advantages</h3>
+      <ul>
+        <li>Early and continuous delivery of working features.</li>
+        <li>Easy to accept requirement changes.</li>
+        <li>Frequent testing reduces defects.</li>
+        <li>Good communication between team members.</li>
+      </ul>
+      <div class="scroll"><table>
+        <tr><th>Sprint</th><th>Goal</th></tr>
+        <tr><td>1</td><td>Requirements, database design, login and registration</td></tr>
+        <tr><td>2</td><td>Event create / update / delete and listing</td></tr>
+        <tr><td>3</td><td>Event registration, cancellation and seat control</td></tr>
+        <tr><td>4</td><td>Reports, CSV export, testing and polishing</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>9. UML Diagrams</h2>
+
+      <h3>9.1 Use Case Diagram</h3>
+      <p>Actors: Student and Admin. The Admin can also use every student function that is relevant to browsing.</p>
+      <figure class="scroll">
+      <svg viewBox="0 0 700 420" font-family="system-ui,sans-serif" font-size="13" role="img" aria-label="Use case diagram">
+        <rect x="190" y="8" width="320" height="404" rx="10" fill="#F7F8FC" stroke="#1B1F3B" stroke-width="1.5"/>
+        <text x="350" y="26" text-anchor="middle" font-weight="700" fill="#1B1F3B">Event Management System</text>
+        <g stroke="#5b6479" stroke-width="1.2">
+          <line x1="70" y1="205" x2="245" y2="55"/><line x1="70" y1="205" x2="245" y2="102"/><line x1="70" y1="205" x2="245" y2="149"/><line x1="70" y1="205" x2="245" y2="196"/>
+          <line x1="630" y1="205" x2="455" y2="55"/><line x1="630" y1="205" x2="455" y2="102"/><line x1="630" y1="205" x2="455" y2="243"/><line x1="630" y1="205" x2="455" y2="290"/><line x1="630" y1="205" x2="455" y2="337"/><line x1="630" y1="205" x2="455" y2="384"/>
+        </g>
+        <g fill="#fff" stroke="#1B1F3B" stroke-width="1.4">
+          <ellipse cx="350" cy="55" rx="105" ry="21"/><ellipse cx="350" cy="102" rx="105" ry="21"/><ellipse cx="350" cy="149" rx="105" ry="21"/><ellipse cx="350" cy="196" rx="105" ry="21"/>
+          <ellipse cx="350" cy="243" rx="105" ry="21"/><ellipse cx="350" cy="290" rx="105" ry="21"/><ellipse cx="350" cy="337" rx="105" ry="21"/><ellipse cx="350" cy="384" rx="105" ry="21"/>
+        </g>
+        <g text-anchor="middle" fill="#1d2233">
+          <text x="350" y="59">Register / Login</text><text x="350" y="106">Browse &amp; search events</text><text x="350" y="153">Register for event</text><text x="350" y="200">Cancel registration</text>
+          <text x="350" y="247">Create event</text><text x="350" y="294">Update / Delete event</text><text x="350" y="341">View attendees</text><text x="350" y="388">Generate report (CSV)</text>
+        </g>
+        <g stroke="#1B1F3B" stroke-width="2" fill="none" stroke-linecap="round">
+          <circle cx="70" cy="165" r="11"/><path d="M70 176V215M70 190H48M70 190H92M70 215L52 245M70 215L88 245"/>
+          <circle cx="630" cy="165" r="11"/><path d="M630 176V215M630 190H608M630 190H652M630 215L612 245M630 215L648 245"/>
+        </g>
+        <g text-anchor="middle" font-weight="700" fill="#1B1F3B"><text x="70" y="266">Student</text><text x="630" y="266">Admin</text></g>
+      </svg>
+      <figcaption>Figure 1: Use case diagram</figcaption></figure>
+
+      <h3>9.2 Class Diagram</h3>
+      <figure class="scroll">
+      <svg viewBox="0 0 720 360" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="12" role="img" aria-label="Class diagram">
+        <defs><marker id="op" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10" fill="none" stroke="#1B1F3B"/></marker></defs>
+        <g fill="#fff" stroke="#1B1F3B" stroke-width="1.4">
+          <rect x="10" y="20" width="200" height="170"/><rect x="260" y="20" width="200" height="170"/><rect x="510" y="20" width="200" height="170"/><rect x="260" y="245" width="200" height="100"/>
+        </g>
+        <g fill="#E4E8FA" stroke="#1B1F3B" stroke-width="1.4"><rect x="10" y="20" width="200" height="26"/><rect x="260" y="20" width="200" height="26"/><rect x="510" y="20" width="200" height="26"/><rect x="260" y="245" width="200" height="26"/></g>
+        <g font-weight="700" text-anchor="middle" fill="#1B1F3B"><text x="110" y="38">User</text><text x="360" y="38">Registration</text><text x="610" y="38">Event</text><text x="360" y="263">ReportService</text></g>
+        <g fill="#1d2233">
+          <text x="18" y="64">- userId : String</text><text x="18" y="80">- name : String</text><text x="18" y="96">- email : String</text><text x="18" y="112">- passwordHash : String</text><text x="18" y="128">- role : String</text>
+          <text x="18" y="152">+ register()</text><text x="18" y="168">+ login()</text><text x="18" y="184">+ logout()</text>
+          <text x="268" y="64">- regId : String</text><text x="268" y="80">- userId : String</text><text x="268" y="96">- eventId : String</text><text x="268" y="112">- registeredOn : Date</text>
+          <text x="268" y="152">+ registerFor()</text><text x="268" y="168">+ cancel()</text>
+          <text x="518" y="64">- eventId : String</text><text x="518" y="80">- title : String</text><text x="518" y="96">- date, time : String</text><text x="518" y="112">- venue : String</text><text x="518" y="128">- category : String</text><text x="518" y="144">- capacity : int</text>
+          <text x="518" y="168">+ create() update()</text><text x="518" y="184">+ delete() seatsLeft()</text>
+          <text x="268" y="292">+ totals()</text><text x="268" y="308">+ perEventFill()</text><text x="268" y="324">+ exportCSV()</text>
+        </g>
+        <g stroke="#1B1F3B" stroke-width="1.4" fill="none">
+          <line x1="210" y1="120" x2="260" y2="120"/><line x1="460" y1="120" x2="510" y2="120"/>
+          <line x1="360" y1="245" x2="360" y2="190" stroke-dasharray="5 4" marker-end="url(#op)"/>
+          <path d="M460 295H610V190" stroke-dasharray="5 4" marker-end="url(#op)"/>
+        </g>
+        <g fill="#B87800" font-weight="700"><text x="214" y="114">1</text><text x="238" y="136">0..*</text><text x="464" y="114">0..*</text><text x="494" y="136">1</text></g>
+        <text x="372" y="222" fill="#5b6479">reads</text>
+      </svg>
+      <figcaption>Figure 2: Class diagram (User 1 — 0..* Registration 0..* — 1 Event)</figcaption></figure>
+
+      <h3>9.3 Sequence Diagram</h3>
+      <p>Scenario: a student registers for an event.</p>
+      <figure class="scroll">
+      <svg viewBox="0 0 700 360" font-family="system-ui,sans-serif" font-size="12.5" role="img" aria-label="Sequence diagram">
+        <defs><marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1B1F3B"/></marker></defs>
+        <g fill="#E4E8FA" stroke="#1B1F3B" stroke-width="1.4"><rect x="15" y="8" width="110" height="30" rx="6"/><rect x="185" y="8" width="110" height="30" rx="6"/><rect x="355" y="8" width="110" height="30" rx="6"/><rect x="525" y="8" width="110" height="30" rx="6"/></g>
+        <g font-weight="700" text-anchor="middle" fill="#1B1F3B"><text x="70" y="28">Student</text><text x="240" y="28">Interface</text><text x="410" y="28">Logic (JS)</text><text x="580" y="28">Storage</text></g>
+        <g stroke="#9aa3b8" stroke-dasharray="4 4"><line x1="70" y1="38" x2="70" y2="345"/><line x1="240" y1="38" x2="240" y2="345"/><line x1="410" y1="38" x2="410" y2="345"/><line x1="580" y1="38" x2="580" y2="345"/></g>
+        <g stroke="#1B1F3B" stroke-width="1.5" fill="none" marker-end="url(#sa)">
+          <line x1="70" y1="78" x2="238" y2="78"/><line x1="240" y1="118" x2="408" y2="118"/><line x1="410" y1="158" x2="578" y2="158"/>
+          <line x1="580" y1="193" x2="412" y2="193" stroke-dasharray="5 4"/>
+          <path d="M410 222h34v20h-32"/>
+          <line x1="410" y1="272" x2="578" y2="272"/>
+          <line x1="410" y1="302" x2="242" y2="302" stroke-dasharray="5 4"/>
+          <line x1="240" y1="330" x2="72" y2="330" stroke-dasharray="5 4"/>
+        </g>
+        <g fill="#1d2233" text-anchor="middle">
+          <text x="154" y="72">1: tap Register</text><text x="324" y="112">2: registerFor(eventId)</text><text x="494" y="152">3: read events, registrations</text>
+          <text x="496" y="187">4: data</text><text x="500" y="236" text-anchor="start">5: check seats, duplicate, date</text>
+          <text x="494" y="266">6: save registration</text><text x="326" y="296">7: success</text><text x="156" y="324">8: confirmation message</text>
+        </g>
+      </svg>
+      <figcaption>Figure 3: Sequence diagram – register for an event</figcaption></figure>
+
+      <h3>9.4 Activity Diagram</h3>
+      <figure class="scroll">
+      <svg viewBox="0 0 520 590" font-family="system-ui,sans-serif" font-size="13" role="img" aria-label="Activity diagram" style="max-width:520px;margin:auto">
+        <defs><marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1B1F3B"/></marker></defs>
+        <g stroke="#1B1F3B" stroke-width="1.5" fill="none" marker-end="url(#aa)">
+          <line x1="200" y1="28" x2="200" y2="45"/><line x1="200" y1="85" x2="200" y2="100"/>
+          <line x1="270" y1="130" x2="330" y2="130"/><path d="M400 110V65H282"/>
+          <line x1="200" y1="160" x2="200" y2="190"/><line x1="200" y1="230" x2="200" y2="255"/><line x1="200" y1="295" x2="200" y2="320"/>
+          <line x1="270" y1="350" x2="330" y2="350"/><path d="M400 370V550H214"/>
+          <line x1="200" y1="380" x2="200" y2="410"/><line x1="200" y1="450" x2="200" y2="475"/><line x1="200" y1="515" x2="200" y2="538"/>
+        </g>
+        <circle cx="200" cy="20" r="8" fill="#1B1F3B"/>
+        <g fill="#E4E8FA" stroke="#1B1F3B" stroke-width="1.4">
+          <rect x="120" y="45" width="160" height="40" rx="14"/><rect x="330" y="110" width="140" height="40" rx="14"/>
+          <rect x="120" y="190" width="160" height="40" rx="14"/><rect x="120" y="255" width="160" height="40" rx="14"/>
+          <rect x="330" y="330" width="140" height="40" rx="14"/><rect x="120" y="410" width="160" height="40" rx="14"/><rect x="120" y="475" width="160" height="40" rx="14"/>
+        </g>
+        <g fill="#FFF1CC" stroke="#1B1F3B" stroke-width="1.4"><polygon points="200,100 270,130 200,160 130,130"/><polygon points="200,320 270,350 200,380 130,350"/></g>
+        <g text-anchor="middle" fill="#1d2233">
+          <text x="200" y="70">Open application</text><text x="200" y="134">Logged in?</text><text x="400" y="134">Login / Register</text>
+          <text x="200" y="214">Browse / search events</text><text x="200" y="279">Select an event</text><text x="200" y="354">Seats free?</text>
+          <text x="400" y="354">Show “Event full”</text><text x="200" y="434">Save registration</text><text x="200" y="499">Show confirmation</text>
+        </g>
+        <g fill="#B87800" font-weight="700"><text x="284" y="122">No</text><text x="208" y="178">Yes</text><text x="284" y="342">No</text><text x="208" y="398">Yes</text></g>
+        <circle cx="200" cy="550" r="12" fill="none" stroke="#1B1F3B" stroke-width="1.5"/><circle cx="200" cy="550" r="7" fill="#1B1F3B"/>
+      </svg>
+      <figcaption>Figure 4: Activity diagram – event registration workflow</figcaption></figure>
+    </div>
+
+    <div class="card">
+      <h2>10. System Architecture</h2>
+      <p>The system uses a three-layer design that runs entirely in the browser.</p>
+      <div class="layers">
+        <div class="layer"><b>Presentation layer</b><small>HTML + CSS user interface, responsive for phones</small>
+          <div class="chips"><span>Login / Register</span><span>Event list &amp; forms</span><span>My registrations</span><span>Reports</span></div></div>
+        <div class="arrow">▼ user actions &nbsp;|&nbsp; ▲ updated screens</div>
+        <div class="layer"><b>Application (logic) layer</b><small>JavaScript services with validation and role checks</small>
+          <div class="chips"><span>AuthService</span><span>EventService</span><span>RegistrationService</span><span>ReportService</span></div></div>
+        <div class="arrow">▼ read / write JSON &nbsp;|&nbsp; ▲ records</div>
+        <div class="layer"><b>Data layer</b><small>Browser Web Storage (key: ems_db)</small>
+          <div class="chips"><span>users</span><span>events</span><span>registrations</span></div></div>
+      </div>
+      <h3>Data flow</h3>
+      <p>The user acts on the interface; the interface calls a service; the service validates the request and updates the stored JSON; the interface is redrawn from the new data.</p>
+      <h3>Communication between modules</h3>
+      <p>Modules communicate through plain function calls with simple objects, so the data layer can later be replaced by REST calls to a server without changing the screens.</p>
+    </div>
+
+    <div class="card">
+      <h2>11. Database Design (ER Diagram)</h2>
+      <figure class="scroll">
+      <svg viewBox="0 0 720 240" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="12" role="img" aria-label="ER diagram">
+        <g fill="#fff" stroke="#1B1F3B" stroke-width="1.4"><rect x="10" y="20" width="200" height="130"/><rect x="260" y="20" width="200" height="110"/><rect x="510" y="20" width="200" height="190"/></g>
+        <g fill="#E4E8FA" stroke="#1B1F3B" stroke-width="1.4"><rect x="10" y="20" width="200" height="26"/><rect x="260" y="20" width="200" height="26"/><rect x="510" y="20" width="200" height="26"/></g>
+        <g font-weight="700" text-anchor="middle" fill="#1B1F3B"><text x="110" y="38">USERS</text><text x="360" y="38">REGISTRATIONS</text><text x="610" y="38">EVENTS</text></g>
+        <g fill="#1d2233">
+          <text x="18" y="66">PK  userId</text><text x="18" y="86">    name</text><text x="18" y="106">    email (unique)</text><text x="18" y="126">    passwordHash</text><text x="18" y="146">    role</text>
+          <text x="268" y="66">PK  regId</text><text x="268" y="86">FK  userId</text><text x="268" y="106">FK  eventId</text><text x="268" y="126">    registeredOn</text>
+          <text x="518" y="66">PK  eventId</text><text x="518" y="86">    title</text><text x="518" y="106">    date, time</text><text x="518" y="126">    venue</text><text x="518" y="146">    category</text><text x="518" y="166">    capacity</text><text x="518" y="186">    description</text>
+        </g>
+        <g stroke="#1B1F3B" stroke-width="1.6"><line x1="210" y1="86" x2="260" y2="86"/><line x1="460" y1="106" x2="510" y2="106"/></g>
+        <g fill="#B87800" font-weight="700"><text x="214" y="80">1</text><text x="240" y="102">N</text><text x="464" y="100">N</text><text x="494" y="122">1</text></g>
+        <g fill="#5b6479"><text x="150" y="190">One user makes many registrations</text><text x="150" y="208">One event has many registrations</text></g>
+      </svg>
+      <figcaption>Figure 5: ER diagram</figcaption></figure>
+
+      <h3>Database tables</h3>
+      <div class="scroll"><table>
+        <tr><th>Table</th><th>Field</th><th>Data type</th><th>Key / Notes</th></tr>
+        <tr><td rowspan="5">Users</td><td>userId</td><td>VARCHAR(10)</td><td>Primary key</td></tr>
+        <tr><td>name</td><td>VARCHAR(60)</td><td>Not null</td></tr>
+        <tr><td>email</td><td>VARCHAR(80)</td><td>Unique</td></tr>
+        <tr><td>passwordHash</td><td>VARCHAR(20)</td><td>Hashed value</td></tr>
+        <tr><td>role</td><td>VARCHAR(10)</td><td>admin / student</td></tr>
+        <tr><td rowspan="8">Events</td><td>eventId</td><td>VARCHAR(10)</td><td>Primary key</td></tr>
+        <tr><td>title</td><td>VARCHAR(100)</td><td>Not null</td></tr>
+        <tr><td>date</td><td>DATE</td><td>Not null</td></tr>
+        <tr><td>time</td><td>TIME</td><td></td></tr>
+        <tr><td>venue</td><td>VARCHAR(80)</td><td></td></tr>
+        <tr><td>category</td><td>VARCHAR(30)</td><td></td></tr>
+        <tr><td>capacity</td><td>INT</td><td>≥ 1</td></tr>
+        <tr><td>description</td><td>TEXT</td><td></td></tr>
+        <tr><td rowspan="4">Registrations</td><td>regId</td><td>VARCHAR(10)</td><td>Primary key</td></tr>
+        <tr><td>userId</td><td>VARCHAR(10)</td><td>Foreign key → Users</td></tr>
+        <tr><td>eventId</td><td>VARCHAR(10)</td><td>Foreign key → Events</td></tr>
+        <tr><td>registeredOn</td><td>DATETIME</td><td></td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>12. Technology Stack</h2>
+      <div class="scroll"><table>
+        <tr><th>Layer</th><th>Technology</th></tr>
+        <tr><td>Frontend</td><td>HTML5, CSS3, JavaScript (ES6)</td></tr>
+        <tr><td>Backend</td><td>JavaScript service functions running in the browser (Node.js can be added later)</td></tr>
+        <tr><td>Database</td><td>Browser Web Storage (JSON); MySQL / MongoDB for a server version</td></tr>
+        <tr><td>IDE</td><td>VS Code</td></tr>
+        <tr><td>Server</td><td>None required (static file); Apache can host it</td></tr>
+        <tr><td>Version Control</td><td>GitHub</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>13. Testing Strategy</h2>
+      <h3>Types of testing</h3>
+      <ul>
+        <li><b>Unit testing:</b> each function (hash, validate event, seatsLeft) tested on its own.</li>
+        <li><b>Integration testing:</b> login → register → cancel flow across modules.</li>
+        <li><b>System testing:</b> whole application on phone and desktop browsers.</li>
+        <li><b>Acceptance testing:</b> students and a staff coordinator try real scenarios.</li>
+      </ul>
+      <h3>Sample test cases</h3>
+      <div class="scroll"><table>
+        <tr><th>Test Case</th><th>Input</th><th>Expected Output</th><th>Result</th></tr>
+        <tr><td>Login</td><td>Valid credentials</td><td>Login successful</td><td>Pass</td></tr>
+        <tr><td>Login</td><td>Invalid credentials</td><td>Error message</td><td>Pass</td></tr>
+        <tr><td>Sign up</td><td>Email already used</td><td>“Email already registered”</td><td>Pass</td></tr>
+        <tr><td>Add event</td><td>Empty title</td><td>Validation message, nothing saved</td><td>Pass</td></tr>
+        <tr><td>Register</td><td>Event with free seat</td><td>Registration saved, seat bar updates</td><td>Pass</td></tr>
+        <tr><td>Register</td><td>Same event twice</td><td>Blocked</td><td>Pass</td></tr>
+        <tr><td>Register</td><td>Full event</td><td>Button disabled / “Event full”</td><td>Pass</td></tr>
+        <tr><td>Edit event</td><td>Capacity lower than registrations</td><td>Rejected with message</td><td>Pass</td></tr>
+        <tr><td>Delete event</td><td>Confirm delete</td><td>Event and its registrations removed</td><td>Pass</td></tr>
+        <tr><td>Student access</td><td>Open Reports tab</td><td>Tab not available</td><td>Pass</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>14. Risk Analysis</h2>
+      <div class="scroll"><table>
+        <tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr>
+        <tr><td>Data loss (browser data cleared)</td><td>High</td><td>CSV export, regular backup, move to server database</td></tr>
+        <tr><td>Security threat</td><td>High</td><td>Password hashing, input escaping, server-side checks in the next version</td></tr>
+        <tr><td>Server failure (after migration)</td><td>Medium</td><td>Cloud backup</td></tr>
+        <tr><td>Requirement change</td><td>Medium</td><td>Agile development</td></tr>
+        <tr><td>Device compatibility</td><td>Low</td><td>Standard HTML/CSS/JS and testing on several phones</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>15. Cost and Time Estimation</h2>
+      <h3>Cost estimation</h3>
+      <div class="scroll"><table>
+        <tr><th>Item</th><th>Estimated Cost</th></tr>
+        <tr><td>Software (open-source tools, domain)</td><td>₹ 1,000</td></tr>
+        <tr><td>Hardware (existing laptops and phones)</td><td>₹ 0</td></tr>
+        <tr><td>Internet</td><td>₹ 1,500</td></tr>
+        <tr><td>Miscellaneous (printing, documentation)</td><td>₹ 500</td></tr>
+        <tr><td><b>Total</b></td><td><b>₹ 3,000</b></td></tr>
+      </table></div>
+      <h3>Time estimation</h3>
+      <div class="scroll"><table>
+        <tr><th>Activity</th><th>Duration</th></tr>
+        <tr><td>Requirement Analysis</td><td>1 Week</td></tr>
+        <tr><td>Design</td><td>1 Week</td></tr>
+        <tr><td>Development</td><td>4 Weeks</td></tr>
+        <tr><td>Testing</td><td>2 Weeks</td></tr>
+        <tr><td>Deployment</td><td>1 Week</td></tr>
+        <tr><td><b>Total</b></td><td><b>9 Weeks</b></td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>16. Advantages</h2>
+      <ul>
+        <li>Saves time for organisers and students.</li>
+        <li>Reduces manual work and paper.</li>
+        <li>Improves accuracy with automatic seat and duplicate checks.</li>
+        <li>Easy to maintain – plain HTML, CSS and JavaScript.</li>
+        <li>Secure – role-based access and hashed passwords.</li>
+        <li>Scalable – storage can be replaced by a server database.</li>
+        <li>User-friendly – works on any phone without installation.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>17. Future Enhancements</h2>
+      <ul>
+        <li>Native mobile application.</li>
+        <li>Cloud deployment with a shared database so data syncs across devices.</li>
+        <li>Real-time notifications and email / SMS reminders.</li>
+        <li>QR-code tickets and attendance scanning at the venue.</li>
+        <li>Analytics dashboard with charts.</li>
+        <li>AI-based event recommendations.</li>
+        <li>Multi-language support.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>18. Conclusion</h2>
+      <p><b>Objectives achieved:</b> the Event Management System lets administrators publish and manage events and lets students register and cancel online, with automatic seat control and one-tap reports.</p>
+      <p><b>Benefits:</b> it replaces scattered notices and paper lists with one reliable system, cutting effort and errors.</p>
+      <p><b>Overall impact:</b> event organisation becomes faster, more transparent and easier to audit.</p>
+      <p><b>Future scope:</b> moving to a cloud database, adding notifications, QR check-in and analytics will turn the prototype into a full campus platform.</p>
+    </div>
+
+    <div class="card">
+      <h2>19. References</h2>
+      <ol style="list-style:none;margin-left:0">
+        <li>[1] I. Sommerville, <i>Software Engineering</i>, 10th ed. Harlow, U.K.: Pearson, 2015.</li>
+        <li>[2] R. S. Pressman and B. R. Maxim, <i>Software Engineering: A Practitioner’s Approach</i>, 9th ed. New York, NY, USA: McGraw-Hill, 2019.</li>
+        <li>[3] Object Management Group, “Unified Modeling Language (UML) Specification, Version 2.5.1,” OMG, Dec. 2017.</li>
+        <li>[4] Mozilla, “Web Storage API,” <i>MDN Web Docs</i>. [Online]. Available: https://developer.mozilla.org/docs/Web/API/Web_Storage_API</li>
+        <li>[5] Mozilla, “HTML, CSS and JavaScript reference,” <i>MDN Web Docs</i>. [Online]. Available: https://developer.mozilla.org</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<footer>Event Management System · Mohammed Maaz &amp; Mohammed Talha</footer>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>\"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const hash = s => { let h = 5381; for (const c of s) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return h.toString(16); };
+let memStore = {};
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return memStore[k] ?? null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){ memStore[k] = v; } },
+  del(k){ try { localStorage.removeItem(k); } catch(e){ delete memStore[k]; } }
+};
+function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(()=>el.classList.remove("on"), 2400); }
+
+/* ---------- data layer ---------- */
+function dayOffset(n){ const d = new Date(); d.setDate(d.getDate()+n); const p = x => String(x).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function seed(){
+  const s = { users: [
+    { id:"u_admin", name:"Administrator", email:"admin@ems.com", pw:hash("admin123"), role:"admin" },
+    { id:"u_demo",  name:"Demo Student",  email:"student@ems.com", pw:hash("student123"), role:"student" }
+  ], events: [
+    { id:"e1", title:"Web Development Workshop", date:dayOffset(4),  time:"10:00", venue:"Computer Lab 2", category:"Workshop", capacity:30, description:"Hands-on session on building responsive pages with HTML, CSS and JavaScript." },
+    { id:"e2", title:"Code Sprint 2026",         date:dayOffset(9),  time:"09:30", venue:"Seminar Hall",   category:"Technical", capacity:60, description:"Team coding contest with three rounds and prizes." },
+    { id:"e3", title:"Cyber Safety Seminar",     date:dayOffset(13), time:"14:00", venue:"Auditorium",     category:"Seminar", capacity:120, description:"Guest talk on safe online habits and careers in security." },
+    { id:"e4", title:"Annual Cultural Night",    date:dayOffset(21), time:"18:00", venue:"Open Ground",    category:"Cultural", capacity:300, description:"Music, dance and drama performances by students." },
+    { id:"e5", title:"Football Tournament",      date:dayOffset(-6), time:"16:00", venue:"Sports Ground",  category:"Sports", capacity:80, description:"Inter-class knockout matches (completed)." }
+  ], regs: [
+    { id:"r1", userId:"u_demo", eventId:"e1", on:new Date().toISOString() }
+  ]};
+  store.set("ems_db", JSON.stringify(s)); return s;
+}
+function load(){ const r = store.get("ems_db"); if (r) { try { const d = JSON.parse(r); if (d && d.users && d.events && d.regs) return d; } catch(e){} } return seed(); }
+let db = load();
+const save = () => store.set("ems_db", JSON.stringify(db));
+
+/* ---------- services ---------- */
+const Auth = {
+  me(){ const id = store.get("ems_session"); return db.users.find(u => u.id === id) || null; },
+  login(email, pw){
+    const u = db.users.find(u => u.email === email.trim().toLowerCase() && u.pw === hash(pw));
+    if (!u) return "Wrong email or password.";
+    store.set("ems_session", u.id); return null;
+  },
+  register(name, email, pw){
+    name = name.trim(); email = email.trim().toLowerCase();
+    if (name.length < 2) return "Enter your full name.";
+    if (!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email address.";
+    if (pw.length < 6) return "Password must be at least 6 characters.";
+    if (db.users.some(u => u.email === email)) return "This email is already registered.";
+    const u = { id:"u_"+uid(), name, email, pw:hash(pw), role:"student" };
+    db.users.push(u); save(); store.set("ems_session", u.id); return null;
+  },
+  logout(){ store.del("ems_session"); }
+};
+const Ev = {
+  regsOf: id => db.regs.filter(r => r.eventId === id),
+  left: e => e.capacity - Ev.regsOf(e.id).length,
+  ended: e => new Date(e.date + "T" + (e.time || "23:59")) < new Date(),
+  isReg: (uidv, eid) => db.regs.some(r => r.userId === uidv && r.eventId === eid),
+  validate(f, existing){
+    if (!f.title.trim()) return "Event title is required.";
+    if (!f.date) return "Choose a date.";
+    if (!Number.isInteger(f.capacity) || f.capacity < 1) return "Capacity must be a whole number, 1 or more.";
+    if (existing && f.capacity < Ev.regsOf(existing.id).length) return "Capacity cannot be lower than the " + Ev.regsOf(existing.id).length + " registrations already made.";
+    return null;
+  },
+  remove(id){ db.events = db.events.filter(e => e.id !== id); db.regs = db.regs.filter(r => r.eventId !== id); save(); },
+  register(userId, eid){
+    const e = db.events.find(x => x.id === eid); if (!e) return "Event not found.";
+    if (Ev.ended(e)) return "This event has already ended.";
+    if (Ev.isReg(userId, eid)) return "You are already registered.";
+    if (Ev.left(e) <= 0) return "Sorry, this event is full.";
+    db.regs.push({ id:"r_"+uid(), userId, eventId:eid, on:new Date().toISOString() }); save(); return null;
+  },
+  cancel(userId, eid){ db.regs = db.regs.filter(r => !(r.userId === userId && r.eventId === eid)); save(); }
+};
+const fmtDate = e => new Date(e.date + "T" + (e.time || "00:00")).toLocaleDateString("en-IN", { weekday:"short", day:"numeric", month:"short", year:"numeric" }) + (e.time ? ", " + e.time : "");
+function download(name, rows){
+  const csv = rows.map(r => r.map(c => '"' + String(c ?? "").replace(/"/g,'""') + '"').join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ---------- modal ---------- */
+function openModal(html){ $("#sheet").innerHTML = html; $("#modal").hidden = false; const f = $("#sheet input,#sheet textarea,#sheet select"); if (f) f.focus(); }
+function closeModal(){ $("#modal").hidden = true; $("#sheet").innerHTML = ""; }
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+/* ---------- UI state ---------- */
+let mode = "login", view = "events", q = "", cat = "all";
+const root = $("#appRoot");
+
+function render(){
+  const u = Auth.me();
+  if (!u) return renderAuth();
+  if (view === "reports" && u.role !== "admin") view = "events";
+  root.innerHTML = `
+    <div class="who"><div><b>${esc(u.name)}</b><span>${u.role === "admin" ? "Administrator" : "Student"}</span></div><button class="btn alt sm" id="logout">Log out</button></div>
+    <div class="subnav" role="tablist">
+      <button role="tab" data-view="events" aria-selected="${view==="events"}">Events</button>
+      <button role="tab" data-view="mine" aria-selected="${view==="mine"}">My registrations</button>
+      ${u.role === "admin" ? `<button role="tab" data-view="reports" aria-selected="${view==="reports"}">Reports</button>` : ""}
+    </div>
+    <div id="pane"></div>`;
+  $("#logout").onclick = () => { Auth.logout(); view = "events"; render(); };
+  root.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { view = b.dataset.view; render(); });
+  renderPane();
+}
+
+function renderAuth(){
+  const reg = mode === "register";
+  root.innerHTML = `
+  <div class="card auth">
+    <h2>${reg ? "Create your account" : "Welcome back"}</h2>
+    <p style="color:var(--mute);font-size:.92rem">${reg ? "Sign up as a student to register for events." : "Log in to browse and manage events."}</p>
+    <div class="seg" role="tablist"><button role="tab" data-m="login" aria-selected="${!reg}">Log in</button><button role="tab" data-m="register" aria-selected="${reg}">Sign up</button></div>
+    <form id="authForm" novalidate>
+      ${reg ? `<label for="an">Full name</label><input id="an" autocomplete="name">` : ""}
+      <label for="ae">Email</label><input id="ae" type="email" autocomplete="email" inputmode="email">
+      <label for="ap">Password</label><input id="ap" type="password" autocomplete="${reg ? "new-password" : "current-password"}">
+      <div class="msg" id="am" role="alert"></div>
+      <button class="btn go" style="width:100%;margin-top:6px" type="submit">${reg ? "Create account" : "Log in"}</button>
+    </form>
+    ${reg ? "" : `<div class="hint"><b>Demo logins</b><br>Admin: admin@ems.com / admin123<br>Student: student@ems.com / student123</div>`}
+  </div>`;
+  root.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { mode = b.dataset.m; renderAuth(); });
+  $("#authForm").onsubmit = ev => {
+    ev.preventDefault();
+    const err = reg ? Auth.register($("#an").value, $("#ae").value, $("#ap").value) : Auth.login($("#ae").value, $("#ap").value);
+    if (err) { $("#am").textContent = err; return; }
+    view = "events"; render(); toast(reg ? "Account created. You are logged in." : "Logged in.");
+  };
+}
+
+function renderPane(){
+  const u = Auth.me(), p = $("#pane");
+  if (view === "events") {
+    const cats = [...new Set(db.events.map(e => e.category).filter(Boolean))].sort();
+    p.innerHTML = `
+      <div class="tools">
+        <input id="q" type="search" placeholder="Search events or venues" value="${esc(q)}" aria-label="Search events">
+        <select id="cat" aria-label="Filter by category"><option value="all">All categories</option>${cats.map(c => `<option ${c===cat?"selected":""}>${esc(c)}</option>`).join("")}</select>
+        ${u.role === "admin" ? `<button class="btn go" id="newEv">Add event</button>` : ""}
+      </div>
+      <div class="grid" id="list"></div>`;
+    $("#q").oninput = e => { q = e.target.value; renderList(); };
+    $("#cat").onchange = e => { cat = e.target.value; renderList(); };
+    if ($("#newEv")) $("#newEv").onclick = () => eventForm();
+    renderList();
+  } else if (view === "mine") {
+    const mine = db.regs.filter(r => r.userId === u.id).map(r => ({ r, e: db.events.find(e => e.id === r.eventId) })).filter(x => x.e).sort((a,b) => a.e.date.localeCompare(b.e.date));
+    p.innerHTML = mine.length ? `<div class="grid">${mine.map(({e}) => `
+      <article class="card ev"><div class="row sp"><h3>${esc(e.title)}</h3>${Ev.ended(e) ? '<span class="badge end">Ended</span>' : '<span class="badge you">Registered</span>'}</div>
+      <div class="meta">${esc(fmtDate(e))}<br>${esc(e.venue)}</div>
+      ${Ev.ended(e) ? "" : `<div class="row"><button class="btn bad sm" data-cancel="${e.id}">Cancel registration</button></div>`}</article>`).join("")}</div>`
+      : `<div class="card empty">You have not registered for any event yet.<br><br><button class="btn go" id="goEv">Browse events</button></div>`;
+    p.querySelectorAll("[data-cancel]").forEach(b => b.onclick = () => { Ev.cancel(u.id, b.dataset.cancel); toast("Registration cancelled."); renderPane(); });
+    if ($("#goEv")) $("#goEv").onclick = () => { view = "events"; render(); };
+  } else if (view === "reports") renderReports(p);
+}
+
+function renderList(){
+  const u = Auth.me(), L = $("#list"); if (!L) return;
+  const term = q.trim().toLowerCase();
+  const list = db.events.filter(e => (cat === "all" || e.category === cat) && (!term || (e.title + " " + e.venue + " " + e.category).toLowerCase().includes(term)))
+    .sort((a,b) => (a.date + (a.time||"")).localeCompare(b.date + (b.time||"")));
+  if (!list.length) { L.innerHTML = `<div class="card empty" style="grid-column:1/-1">${db.events.length ? "No events match your search. Clear the search or change the category." : "No events yet. Use “Add event” to create the first one."}</div>`; return; }
+  L.innerHTML = list.map(e => {
+    const n = Ev.regsOf(e.id).length, pct = Math.min(100, Math.round(n / e.capacity * 100)), full = n >= e.capacity, ended = Ev.ended(e), mine = Ev.isReg(u.id, e.id);
+    let act = "";
+    if (u.role === "admin") act = `<button class="btn alt sm" data-att="${e.id}">Attendees (${n})</button><button class="btn alt sm" data-edit="${e.id}">Edit</button><button class="btn bad sm" data-del="${e.id}">Delete</button>`;
+    else if (mine && !ended) act = `<button class="btn bad sm" data-cancel="${e.id}">Cancel registration</button>`;
+    else if (!ended) act = `<button class="btn go sm" data-reg="${e.id}" ${full ? "disabled" : ""}>${full ? "Event full" : "Register"}</button>`;
+    return `<article class="card ev">
+      <div class="row sp"><h3>${esc(e.title)}</h3><span class="badge">${esc(e.category || "General")}</span></div>
+      <div class="meta">${esc(fmtDate(e))}<br>${esc(e.venue || "Venue to be announced")}</div>
+      ${e.description ? `<p style="font-size:.92rem">${esc(e.description)}</p>` : ""}
+      <div class="bar ${full ? "full" : ""}" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <div class="row sp"><span class="meta">${n} of ${e.capacity} seats taken</span>
+        <span>${ended ? '<span class="badge end">Ended</span>' : full ? '<span class="badge full">Full</span>' : ""}${mine ? ' <span class="badge you">You are in</span>' : ""}</span></div>
+      <div class="row">${act}</div></article>`;
+  }).join("");
+  L.querySelectorAll("[data-reg]").forEach(b => b.onclick = () => { const err = Ev.register(u.id, b.dataset.reg); toast(err || "You are registered."); renderList(); });
+  L.querySelectorAll("[data-cancel]").forEach(b => b.onclick = () => { Ev.cancel(u.id, b.dataset.cancel); toast("Registration cancelled."); renderList(); });
+  L.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => eventForm(db.events.find(e => e.id === b.dataset.edit)));
+  L.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    const e = db.events.find(x => x.id === b.dataset.del);
+    openModal(`<h2>Delete this event?</h2><p>“${esc(e.title)}” and its ${Ev.regsOf(e.id).length} registrations will be removed. This cannot be undone.</p>
+      <div class="row" style="margin-top:14px"><button class="btn bad" id="yes">Delete event</button><button class="btn alt" id="no">Keep event</button></div>`);
+    $("#no").onclick = closeModal;
+    $("#yes").onclick = () => { Ev.remove(e.id); closeModal(); toast("Event deleted."); renderList(); };
+  });
+  L.querySelectorAll("[data-att]").forEach(b => b.onclick = () => {
+    const e = db.events.find(x => x.id === b.dataset.att), rs = Ev.regsOf(e.id);
+    openModal(`<h2>${esc(e.title)}</h2><p style="color:var(--mute)">${rs.length} of ${e.capacity} registered</p>
+      ${rs.length ? `<div class="scroll"><table><tr><th>#</th><th>Name</th><th>Email</th></tr>${rs.map((r,i) => { const x = db.users.find(u => u.id === r.userId) || {}; return `<tr><td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.email)}</td></tr>`; }).join("")}</table></div>` : `<div class="empty">Nobody has registered yet.</div>`}
+      <div class="row" style="margin-top:14px"><button class="btn alt" id="cl">Close</button></div>`);
+    $("#cl").onclick = closeModal;
+  });
+}
+
+function eventForm(ex){
+  const e = ex || { title:"", date:dayOffset(7), time:"10:00", venue:"", category:"Workshop", capacity:50, description:"" };
+  openModal(`<h2>${ex ? "Edit event" : "Add event"}</h2>
+    <form id="ef" novalidate>
+      <label for="f1">Title</label><input id="f1" value="${esc(e.title)}">
+      <div class="two"><div><label for="f2">Date</label><input id="f2" type="date" value="${esc(e.date)}"></div><div><label for="f3">Time</label><input id="f3" type="time" value="${esc(e.time)}"></div></div>
+      <label for="f4">Venue</label><input id="f4" value="${esc(e.venue)}">
+      <div class="two"><div><label for="f5">Category</label><input id="f5" list="cl" value="${esc(e.category)}"><datalist id="cl"><option>Workshop<option>Technical<option>Seminar<option>Cultural<option>Sports</datalist></div>
+      <div><label for="f6">Capacity</label><input id="f6" type="number" min="1" inputmode="numeric" value="${esc(e.capacity)}"></div></div>
+      <label for="f7">Description</label><textarea id="f7">${esc(e.description)}</textarea>
+      <div class="msg" id="fm" role="alert"></div>
+      <div class="row"><button class="btn go" type="submit">Save event</button><button class="btn alt" type="button" id="fc">Cancel</button></div>
+    </form>`);
+  $("#fc").onclick = closeModal;
+  $("#ef").onsubmit = ev => {
+    ev.preventDefault();
+    const f = { title:$("#f1").value, date:$("#f2").value, time:$("#f3").value, venue:$("#f4").value.trim(), category:$("#f5").value.trim() || "General", capacity:Number($("#f6").value), description:$("#f7").value.trim() };
+    const err = Ev.validate(f, ex); if (err) { $("#fm").textContent = err; return; }
+    f.title = f.title.trim();
+    if (ex) Object.assign(ex, f); else db.events.push({ id:"e_"+uid(), ...f });
+    save(); closeModal(); toast(ex ? "Event updated." : "Event added."); renderPane();
+  };
+}
+
+function renderReports(p){
+  const totalRegs = db.regs.length, cap = db.events.reduce((s,e) => s + e.capacity, 0);
+  const upcoming = db.events.filter(e => !Ev.ended(e)).length;
+  const fill = cap ? Math.round(totalRegs / cap * 100) : 0;
+  p.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${db.events.length}</b><span>Events</span></div>
+      <div class="stat"><b>${upcoming}</b><span>Upcoming</span></div>
+      <div class="stat"><b>${db.users.filter(u => u.role === "student").length}</b><span>Students</span></div>
+      <div class="stat"><b>${totalRegs}</b><span>Registrations</span></div>
+      <div class="stat"><b>${fill}%</b><span>Seats filled</span></div>
+    </div>
+    <div class="card"><h3 style="margin-bottom:8px">Registrations per event</h3>
+      <div class="scroll"><table><tr><th>Event</th><th>Date</th><th>Registered</th><th>Capacity</th><th>Fill</th></tr>
+      ${db.events.map(e => { const n = Ev.regsOf(e.id).length; return `<tr><td>${esc(e.title)}</td><td>${esc(e.date)}</td><td>${n}</td><td>${e.capacity}</td><td>${Math.round(n/e.capacity*100)}%</td></tr>`; }).join("") || `<tr><td colspan="5">No events yet.</td></tr>`}
+      </table></div>
+      <div class="row" style="margin-top:12px"><button class="btn go" id="x1">Export summary (CSV)</button><button class="btn alt" id="x2">Export attendees (CSV)</button><button class="btn bad" id="rs">Reset demo data</button></div>
+    </div>`;
+  $("#x1").onclick = () => download("ems-summary.csv", [["Event","Date","Venue","Category","Capacity","Registered","Fill %"], ...db.events.map(e => { const n = Ev.regsOf(e.id).length; return [e.title,e.date,e.venue,e.category,e.capacity,n,Math.round(n/e.capacity*100)]; })]);
+  $("#x2").onclick = () => download("ems-attendees.csv", [["Event","Date","Name","Email","Registered on"], ...db.regs.map(r => { const e = db.events.find(x => x.id === r.eventId) || {}, u = db.users.find(x => x.id === r.userId) || {}; return [e.title,e.date,u.name,u.email,r.on]; })]);
+  $("#rs").onclick = () => {
+    openModal(`<h2>Reset all data?</h2><p>All events, students and registrations will be replaced by the demo data.</p>
+      <div class="row" style="margin-top:14px"><button class="btn bad" id="y">Reset data</button><button class="btn alt" id="n">Keep data</button></div>`);
+    $("#n").onclick = closeModal;
+    $("#y").onclick = () => { store.del("ems_session"); db = seed(); closeModal(); view = "events"; mode = "login"; render(); toast("Demo data restored."); };
+  };
+}
+
+/* ---------- top-level tabs ---------- */
+function setMode(rep){
+  $("#appPanel").hidden = rep; $("#reportPanel").hidden = !rep;
+  $("#tabApp").setAttribute("aria-selected", String(!rep)); $("#tabRep").setAttribute("aria-selected", String(rep));
+  window.scrollTo(0, 0);
+}
+$("#tabApp").onclick = () => setMode(false);
+$("#tabRep").onclick = () => setMode(true);
+
+render();
+</script>
+</body>
+</html>
+
